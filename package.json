@@ -1,0 +1,12 @@
+{
+  "name": "numpy-nebula",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "serve": "python -m http.server 4173"
+  },
+  "devDependencies": {
+    "playwright": "^1.58.2"
+  }
+}

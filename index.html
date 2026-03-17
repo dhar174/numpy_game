@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>NumPy Nebula: Reboot the Colony Ship</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2307111f'/%3E%3Cpath d='M10 34c5-16 15-24 29-24l15 2c6 1 8 9 3 14l3 6c2 5-1 11-7 12l-16 2c-13 1-22-3-27-12Z' fill='%238cc7ff'/%3E%3Ccircle cx='15' cy='33' r='6' fill='%236ef4d1'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script
+      src="https://cdn.jsdelivr.net/pyodide/v0.26.3/full/pyodide.js"
+      defer
+    ></script>
+    <script type="module" src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero-bar">
+        <div>
+          <p class="eyebrow">NumPy Nebula</p>
+          <h1>Reboot the Colony Ship</h1>
+          <p class="hero-copy">
+            Repair a stranded ship by writing real Python and NumPy. Every room
+            is a live array puzzle with visual feedback, story beats, and
+            beginner-friendly hints.
+          </p>
+        </div>
+        <div class="status-cluster">
+          <div class="status-pill" id="engine-status">Loading NumPy engine...</div>
+          <div class="status-pill accent" id="progress-status">0 / 7 sectors restored</div>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="panel bridge-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Ship View</p>
+              <h2>Bridge Hologram</h2>
+            </div>
+            <button class="ghost-button" id="fullscreen-btn" type="button">
+              Fullscreen [F]
+            </button>
+          </div>
+
+          <div class="canvas-card" id="canvas-card">
+            <canvas
+              id="ship-canvas"
+              width="960"
+              height="540"
+              aria-label="Colony ship tactical display"
+            ></canvas>
+          </div>
+
+          <div class="sector-list" id="sector-list" aria-live="polite"></div>
+        </section>
+
+        <section class="panel mission-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Mission Control</p>
+              <h2 id="mission-title">Boot Bay</h2>
+            </div>
+            <div class="mission-badge" id="mission-sector">Sector 1</div>
+          </div>
+
+          <div class="story-card">
+            <p class="story-lead" id="mission-story"></p>
+            <div class="info-grid">
+              <article class="info-card">
+                <h3>Learning Goals</h3>
+                <ul id="learning-goals"></ul>
+              </article>
+              <article class="info-card">
+                <h3>Repair Checklist</h3>
+                <ul id="mission-tasks"></ul>
+              </article>
+            </div>
+          </div>
+
+          <div class="concept-strip">
+            <div>
+              <p class="mini-label">Expected Concepts</p>
+              <div class="chip-row" id="concept-chips"></div>
+            </div>
+            <div>
+              <p class="mini-label">System Arrays</p>
+              <div class="chip-row" id="array-tags"></div>
+            </div>
+          </div>
+
+          <div class="hint-card">
+            <div class="hint-heading">
+              <h3>Mission Hints</h3>
+              <button class="ghost-button" id="hint-btn" type="button">
+                Reveal Hint
+              </button>
+            </div>
+            <div id="hint-list"></div>
+          </div>
+
+          <div class="output-card">
+            <div class="output-heading">
+              <h3>Run Output</h3>
+              <div class="mission-badge subtle" id="run-state">Starter code loaded</div>
+            </div>
+            <p class="run-summary" id="run-summary">
+              NumPy alias <code>np</code> will be ready as soon as the engine
+              finishes loading.
+            </p>
+            <div class="output-grid">
+              <article>
+                <h4>Validation</h4>
+                <ul id="validation-list" class="checklist"></ul>
+              </article>
+              <article>
+                <h4>Console</h4>
+                <pre id="stdout-pane" class="terminal-pane">Waiting for first run...</pre>
+              </article>
+              <article>
+                <h4>Errors</h4>
+                <pre id="error-pane" class="terminal-pane muted">No errors yet.</pre>
+              </article>
+            </div>
+            <div class="action-row">
+              <button class="primary-button" id="run-btn" type="button">
+                Run Code
+              </button>
+              <button class="ghost-button" id="reset-btn" type="button">
+                Reset Mission
+              </button>
+              <button class="ghost-button" id="next-btn" type="button">
+                Next Sector
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel code-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Code Deck</p>
+              <h2>NumPy Console</h2>
+            </div>
+            <div class="mini-label">Ctrl + Enter to run</div>
+          </div>
+
+          <label class="editor-label" for="code-editor"
+            >Mission script. NumPy is preloaded as <code>np</code>.</label
+          >
+          <textarea
+            id="code-editor"
+            spellcheck="false"
+            aria-label="NumPy mission code editor"
+          ></textarea>
+
+          <div class="inspector-card">
+            <div class="output-heading">
+              <h3>Array Inspector</h3>
+              <div class="mission-badge subtle" id="active-array-badge">
+                No array selected
+              </div>
+            </div>
+            <div class="variable-tabs" id="variable-tabs"></div>
+            <div id="array-inspector" class="inspector-body">
+              <p class="empty-state">
+                Run the mission code to inspect live arrays, masks, reports, and
+                matrix outputs.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
