@@ -36,6 +36,35 @@
         </div>
       </header>
 
+      <section class="briefing-banner" id="briefing-banner">
+        <div class="briefing-copy">
+          <p class="mini-label">First Run Briefing</p>
+          <h2>How to Fly This Lesson</h2>
+          <p>
+            Read the sector story, scan the repair checklist, then edit the real
+            NumPy code. Press <code>Run Code</code> to validate your solution,
+            inspect the resulting arrays, and unlock the next sector.
+          </p>
+          <div class="briefing-steps">
+            <div class="briefing-step">
+              <strong>1. Read the mission</strong>
+              <span>Use the Primary Target and checklist to know what shape the answer should take.</span>
+            </div>
+            <div class="briefing-step">
+              <strong>2. Write real NumPy</strong>
+              <span>Type actual Python and NumPy, not pseudocode or block commands.</span>
+            </div>
+            <div class="briefing-step">
+              <strong>3. Verify the arrays</strong>
+              <span>Check the validator, inspector, and output panes together before moving on.</span>
+            </div>
+          </div>
+        </div>
+        <button class="ghost-button" id="dismiss-briefing-btn" type="button">
+          Hide Briefing
+        </button>
+      </section>
+
       <main class="dashboard">
         <section class="panel bridge-panel">
           <div class="panel-heading">
@@ -83,6 +112,28 @@
             </div>
           </div>
 
+          <div class="focus-card">
+            <div class="focus-grid">
+              <article class="focus-panel">
+                <p class="mini-label">Primary Target</p>
+                <h3 id="mission-focus"></h3>
+                <p class="focus-body" id="mission-success-signal"></p>
+              </article>
+              <article class="focus-panel">
+                <p class="mini-label">Run Progress</p>
+                <div class="focus-metrics">
+                  <strong id="mission-progress-metric">0 / 0 checks passing</strong>
+                  <span id="concept-progress-metric">0 / 0 concepts detected</span>
+                </div>
+                <p class="focus-body" id="mission-next-step"></p>
+              </article>
+            </div>
+            <article class="focus-panel pitfalls-panel">
+              <h3>Common Pitfalls</h3>
+              <ul id="pitfall-list"></ul>
+            </article>
+          </div>
+
           <div class="concept-strip">
             <div>
               <p class="mini-label">Expected Concepts</p>
@@ -104,7 +155,7 @@
             <div id="hint-list"></div>
           </div>
 
-          <div class="output-card">
+          <div class="output-card" id="output-card">
             <div class="output-heading">
               <h3>Run Output</h3>
               <div class="mission-badge subtle" id="run-state">Starter code loaded</div>
@@ -113,6 +164,7 @@
               NumPy alias <code>np</code> will be ready as soon as the engine
               finishes loading.
             </p>
+            <div class="feedback-strip" id="run-highlights"></div>
             <div class="output-grid">
               <article>
                 <h4>Validation</h4>

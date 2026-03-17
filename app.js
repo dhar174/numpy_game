@@ -3,21 +3,31 @@ import { missions, getConceptMatches } from "./missions.js";
 const refs = {
   engineStatus: document.getElementById("engine-status"),
   progressStatus: document.getElementById("progress-status"),
+  briefingBanner: document.getElementById("briefing-banner"),
+  dismissBriefingBtn: document.getElementById("dismiss-briefing-btn"),
   sectorList: document.getElementById("sector-list"),
   missionTitle: document.getElementById("mission-title"),
   missionSector: document.getElementById("mission-sector"),
   missionStory: document.getElementById("mission-story"),
   learningGoals: document.getElementById("learning-goals"),
   missionTasks: document.getElementById("mission-tasks"),
+  missionFocus: document.getElementById("mission-focus"),
+  missionSuccessSignal: document.getElementById("mission-success-signal"),
+  missionNextStep: document.getElementById("mission-next-step"),
+  missionProgressMetric: document.getElementById("mission-progress-metric"),
+  conceptProgressMetric: document.getElementById("concept-progress-metric"),
+  pitfallList: document.getElementById("pitfall-list"),
   conceptChips: document.getElementById("concept-chips"),
   arrayTags: document.getElementById("array-tags"),
   hintList: document.getElementById("hint-list"),
   hintBtn: document.getElementById("hint-btn"),
   runState: document.getElementById("run-state"),
   runSummary: document.getElementById("run-summary"),
+  runHighlights: document.getElementById("run-highlights"),
   validationList: document.getElementById("validation-list"),
   stdoutPane: document.getElementById("stdout-pane"),
   errorPane: document.getElementById("error-pane"),
+  outputCard: document.getElementById("output-card"),
   runBtn: document.getElementById("run-btn"),
   resetBtn: document.getElementById("reset-btn"),
   nextBtn: document.getElementById("next-btn"),
@@ -38,6 +48,7 @@ const state = {
   selectedVariable: null,
   executionResult: null,
   hintsVisible: 1,
+  briefingDismissed: readBooleanPreference("numpy-nebula-briefing-dismissed"),
   simTime: 0,
   lastFrameTime: performance.now(),
   stars: createStars(88),
@@ -56,6 +67,22 @@ const sectorPositions = [
 
 function currentMission() {
   return missions[state.currentMissionIndex];
+}
+
+function readBooleanPreference(key) {
+  try {
+    return window.localStorage.getItem(key) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeBooleanPreference(key, value) {
+  try {
+    window.localStorage.setItem(key, String(value));
+  } catch {
+    // Ignore persistence failures in restrictive browser environments.
+  }
 }
 
 function isMissionUnlocked(index) {
@@ -99,6 +126,10 @@ function setEngineStatus(text, accent = false) {
   refs.engineStatus.classList.toggle("accent", accent);
 }
 
+function renderBriefing() {
+  refs.briefingBanner.hidden = state.briefingDismissed;
+}
+
 function renderMissionList() {
   refs.sectorList.innerHTML = missions
     .map((mission, index) => {
@@ -136,11 +167,28 @@ function renderMissionList() {
 
 function renderMissionDetails() {
   const mission = currentMission();
+  const validationChecks = state.executionResult?.validation?.checks ?? [];
+  const passedChecks = validationChecks.filter((check) => check.passed).length;
+  const totalChecks = validationChecks.length || mission.tasks.length;
+  const detectedConcepts = state.executionResult?.conceptsUsed?.length ?? 0;
+  const totalConcepts = mission.expectedConcepts.length;
+  const firstFail = validationChecks.find((check) => !check.passed);
+
   refs.missionTitle.textContent = `${mission.sector}: ${mission.title}`;
   refs.missionSector.textContent = mission.sectorLabel;
   refs.missionStory.textContent = mission.storyPrompt;
   refs.learningGoals.innerHTML = mission.learningGoals.map((goal) => `<li>${escapeHtml(goal)}</li>`).join("");
   refs.missionTasks.innerHTML = mission.tasks.map((task) => `<li>${escapeHtml(task)}</li>`).join("");
+  refs.missionFocus.textContent = mission.focusPrompt;
+  refs.missionSuccessSignal.textContent = mission.successSignal;
+  refs.pitfallList.innerHTML = mission.commonPitfalls.map((pitfall) => `<li>${escapeHtml(pitfall)}</li>`).join("");
+  refs.missionProgressMetric.textContent = `${passedChecks} / ${totalChecks} checks passing`;
+  refs.conceptProgressMetric.textContent = `${detectedConcepts} / ${totalConcepts} concepts detected`;
+  refs.missionNextStep.textContent = state.executionResult
+    ? firstFail
+      ? `Next repair step: ${firstFail.label}.`
+      : mission.successSignal
+    : `Start with: ${mission.tasks[0]}`;
   refs.arrayTags.innerHTML = Object.entries(mission.initialArrays)
     .map(([name, detail]) => `<span class="chip">${escapeHtml(name)}: ${escapeHtml(detail)}</span>`)
     .join("");
@@ -175,21 +223,36 @@ function renderHints() {
 
 function renderOutput() {
   const result = state.executionResult;
+  const mission = currentMission();
 
   if (!result) {
+    refs.outputCard.dataset.status = "idle";
     refs.runState.textContent = "Starter code loaded";
     refs.runSummary.textContent =
       "Run the mission script to validate the current repair sequence and inspect the resulting arrays.";
+    refs.runHighlights.innerHTML = `
+      <span class="feedback-pill">0 / ${mission.tasks.length} checks passing</span>
+      <span class="feedback-pill">0 / ${mission.expectedConcepts.length} concepts detected</span>
+      <span class="feedback-pill">Awaiting first execution</span>
+    `;
     refs.validationList.innerHTML = "";
     refs.stdoutPane.textContent = "Waiting for first run...";
     refs.errorPane.textContent = "No errors yet.";
     return;
   }
 
+  const passedChecks = result.validation.checks.filter((check) => check.passed).length;
+  const conceptCount = result.conceptsUsed.length;
+  refs.outputCard.dataset.status = result.missionComplete ? "success" : result.error ? "error" : "warning";
   refs.runState.textContent = result.missionComplete ? "Sector restored" : result.error ? "Run failed" : "Needs tuning";
   refs.runSummary.textContent = result.error
     ? formatFriendlyError(result.error, currentMission())
     : result.validation.summary;
+  refs.runHighlights.innerHTML = `
+    <span class="feedback-pill ${result.missionComplete ? "success" : ""}">${passedChecks} / ${result.validation.checks.length} checks passing</span>
+    <span class="feedback-pill ${conceptCount === mission.expectedConcepts.length ? "success" : ""}">${conceptCount} / ${mission.expectedConcepts.length} concepts detected</span>
+    <span class="feedback-pill">${variableEntries().length} outputs captured</span>
+  `;
   refs.validationList.innerHTML = result.validation.checks
     .map((check) => `<li class="${check.passed ? "pass" : "fail"}">${check.passed ? "Pass" : "Fix"}: ${escapeHtml(check.label)}</li>`)
     .join("");
@@ -414,6 +477,7 @@ function updateControls() {
 
 function renderAll() {
   updateProgressStatus();
+  renderBriefing();
   renderMissionList();
   renderMissionDetails();
   renderConceptChips();
@@ -546,14 +610,29 @@ function formatFriendlyError(errorText, mission) {
   if (lowered.includes("axis")) {
     return "Axis issue detected. Remember axis 0 runs down rows and axis 1 runs across columns for 2D arrays.";
   }
+  if (lowered.includes("syntaxerror")) {
+    return "Python hit a syntax error. Check commas, brackets, and whether each line forms valid Python before running again.";
+  }
+  if (lowered.includes("attributeerror")) {
+    return "A NumPy attribute or method call looks off. Double-check the exact function name, especially helpers like reshape, copy, or astype.";
+  }
   if (lowered.includes("list") && lowered.includes("reshape")) {
     return "A Python list cannot reshape itself. Convert it into a NumPy array first.";
+  }
+  if (lowered.includes("cannot convert") || lowered.includes("could not convert")) {
+    return "A dtype conversion failed. Make sure the values and dtype you picked are compatible.";
+  }
+  if (lowered.includes("indexerror")) {
+    return "An index went out of range. Recheck your row and column positions and whether slicing stops before the end value.";
   }
   if (lowered.includes("too many indices")) {
     return "Indexing mismatch detected. Double-check whether the target is 1D or 2D before slicing.";
   }
   if (lowered.includes("nameerror")) {
     return "A variable name is missing or misspelled. Scan the starter code for the exact names this sector expects.";
+  }
+  if (lowered.includes("matmul") || lowered.includes("shapes") && lowered.includes("not aligned")) {
+    return "Matrix multiplication shapes do not line up. Confirm the inner dimensions match before using @ or np.matmul.";
   }
   return `${mission.sector} reports a Python error. Scroll to the error pane for the full traceback, then use the hints to narrow it down.`;
 }
@@ -788,21 +867,30 @@ function drawShipCanvas() {
 }
 
 function updateTextHooks() {
+  const validationChecks = state.executionResult?.validation?.checks ?? [];
+  const passedChecks = validationChecks.filter((check) => check.passed).length;
   window.render_game_to_text = () =>
     JSON.stringify({
-      mode: state.pyodideReady ? "ready" : "loading",
+      mode: !state.pyodideReady ? "loading-engine" : state.executionResult ? "ready" : "priming-mission",
+      briefingDismissed: state.briefingDismissed,
+      engineStatus: refs.engineStatus.textContent,
       coordinates: "Ship canvas origin is top-left. x increases right, y increases downward.",
       mission: {
         index: state.currentMissionIndex,
         id: currentMission().id,
         sector: currentMission().sector,
         title: currentMission().title,
+        focusPrompt: currentMission().focusPrompt,
+        successSignal: currentMission().successSignal,
         tasks: currentMission().tasks,
         complete: Boolean(state.executionResult?.missionComplete),
       },
       progress: {
         completed: Array.from(state.completedMissionIds),
         unlockedCount: Math.min(missions.length, state.completedMissionIds.size + 1),
+        checksPassing: passedChecks,
+        totalChecks: validationChecks.length,
+        conceptsDetected: state.executionResult?.conceptsUsed?.length ?? 0,
       },
       arrays: variableEntries().map(([name, value]) => ({
         name,
@@ -851,6 +939,11 @@ async function initPyodide() {
 function attachEvents() {
   refs.sectorList.addEventListener("click", handleMissionSelection);
   refs.variableTabs.addEventListener("click", handleVariableSelection);
+  refs.dismissBriefingBtn.addEventListener("click", () => {
+    state.briefingDismissed = true;
+    writeBooleanPreference("numpy-nebula-briefing-dismissed", true);
+    renderBriefing();
+  });
   refs.hintBtn.addEventListener("click", () => {
     state.hintsVisible = Math.min(state.hintsVisible + 1, currentMission().hints.length);
     renderHints();

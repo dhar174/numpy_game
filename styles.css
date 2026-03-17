@@ -33,6 +33,10 @@ body {
   color: var(--text);
 }
 
+[hidden] {
+  display: none !important;
+}
+
 button,
 textarea {
   font: inherit;
@@ -88,6 +92,62 @@ pre {
   margin: 12px 0 0;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.briefing-banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 18px;
+  padding: 18px 20px;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 190, 104, 0.16);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 190, 104, 0.14), transparent 28%),
+    linear-gradient(180deg, rgba(18, 24, 39, 0.92), rgba(10, 17, 30, 0.96));
+  box-shadow: var(--shadow);
+}
+
+.briefing-banner h2 {
+  margin: 6px 0 8px;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  letter-spacing: 0.03em;
+}
+
+.briefing-banner p {
+  margin: 0;
+  color: #dfeffc;
+  line-height: 1.55;
+}
+
+.briefing-copy {
+  flex: 1;
+}
+
+.briefing-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.briefing-step {
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.briefing-step strong,
+.focus-panel h3 {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.briefing-step span {
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .status-cluster {
@@ -249,6 +309,7 @@ pre {
 }
 
 .story-card,
+.focus-card,
 .hint-card,
 .output-card,
 .inspector-card {
@@ -257,6 +318,49 @@ pre {
   border-radius: 22px;
   border: 1px solid var(--line);
   background: rgba(8, 15, 28, 0.7);
+}
+
+.focus-card {
+  display: grid;
+  gap: 14px;
+}
+
+.focus-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.focus-panel {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.focus-body {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.focus-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.focus-metrics strong {
+  font-size: 1.08rem;
+}
+
+.focus-metrics span {
+  color: var(--accent);
+}
+
+.pitfalls-panel ul {
+  margin-top: 10px;
 }
 
 .story-lead {
@@ -351,6 +455,40 @@ li + li {
   margin: 10px 0 0;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.feedback-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.feedback-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.feedback-pill.success {
+  color: #08151d;
+  background: linear-gradient(135deg, #7ef0d2, #b2f3ff);
+}
+
+.output-card[data-status="success"] {
+  border-color: rgba(110, 244, 209, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(110, 244, 209, 0.08);
+}
+
+.output-card[data-status="warning"] {
+  border-color: rgba(255, 190, 104, 0.22);
+}
+
+.output-card[data-status="error"] {
+  border-color: rgba(255, 127, 127, 0.22);
 }
 
 .terminal-pane {
@@ -566,6 +704,7 @@ li + li {
   }
 
   .info-grid,
+  .focus-grid,
   .concept-strip,
   .output-grid {
     grid-template-columns: 1fr;
@@ -587,12 +726,25 @@ li + li {
     align-items: start;
   }
 
+  .briefing-banner,
   .status-cluster {
     justify-content: start;
   }
 
+  .briefing-banner {
+    flex-direction: column;
+  }
+
+  .briefing-steps {
+    grid-template-columns: 1fr;
+  }
+
   .meta-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #code-editor {
+    min-height: 300px;
   }
 
   .action-row,

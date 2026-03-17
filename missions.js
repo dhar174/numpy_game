@@ -217,6 +217,13 @@ function validateReactorGarden(execution, code, conceptMatches) {
       ], { shape: [2, 3], epsilon: 1e-8 }),
     },
     {
+      label: "wave uses np.sin on the root_heat matrix",
+      passed: ndarrayMatches(getValue(namedArrays, "wave"), [
+        [0.8414709848078965, 0.9092974268256817, 0.1411200080598672],
+        [-0.7568024953079282, -0.9589242746631385, -0.27941549819892586],
+      ], { shape: [2, 3], epsilon: 1e-8 }),
+    },
+    {
       label: "boosted adds the broadcast bias vector",
       passed: ndarrayMatches(getValue(namedArrays, "boosted"), [
         [1.5, 3, 4.5],
@@ -542,7 +549,16 @@ export const missions = [
     title: "Cold Start Arrays",
     shortDescription: "Creation functions, shape, ndim, size, dtype",
     storyPrompt:
-      "The ship wakes in pieces. Boot Bay can only relight the cryo decks if you rebuild the first power arrays and prove you understand what an ndarray knows about itself.",
+      "The ship wakes in pieces. Boot Bay can only relight the cryo decks if you rebuild the first healthy arrays and show the bridge that you can read what an ndarray knows about itself.",
+    focusPrompt:
+      "Build clean starter arrays with the right shapes and dtypes, then report the metadata from the diagnostic matrix.",
+    successSignal:
+      "You should see every Boot Bay check pass, a clean metadata report, and Sensor Deck unlock on the ship map.",
+    commonPitfalls: [
+      "Leaving calibration as a flat line instead of reshaping it into a 2x3 grid.",
+      "Using the right values but the wrong dtype for nanobots.",
+      "Forgetting that report should describe boot_matrix, not a different array.",
+    ],
     learningGoals: [
       "Create arrays with np.array, zeros, full, arange, and linspace.",
       "Inspect shape, ndim, size, and dtype on an ndarray.",
@@ -574,11 +590,21 @@ export const missions = [
     ],
     starterCode: `# Boot Bay: restore the starter arrays.
 # NumPy is already imported as np.
+# Replace each placeholder with the healthy array described in the checklist.
 
+# TODO: make power_core a 3x4 float64 grid of zeros.
 power_core = np.ones((2, 2), dtype=np.float64)
+
+# TODO: create six evenly spaced values from 0.1 to 1.1, then reshape to 2x3.
 calibration = np.arange(6)
+
+# TODO: make nanobots a 2x2 matrix filled with 7 using dtype=np.int16.
 nanobots = np.array([1, 1, 1, 1], dtype=np.int16)
+
+# Leave boot_matrix as the diagnostic matrix you inspect in report.
 boot_matrix = np.array([[2, 4, 6], [8, 10, 12]], dtype=np.int16)
+
+# TODO: create the course line with np.arange(10, 20, 2).
 course_line = np.array([0.0, 1.0, 2.0])
 
 report = {
@@ -591,9 +617,9 @@ report = {
 print("Boot Bay arrays online.")
 `,
     hints: [
-      "Remember: np.zeros((rows, cols), dtype=np.float64) creates a 2D float grid.",
-      "np.linspace(start, stop, count) is a great way to make evenly spaced calibration values.",
-      "You can reshape a 1D result with .reshape(2, 3) after linspace or arange.",
+      "Remember: np.zeros((rows, cols), dtype=np.float64) creates a 2D float grid in one step.",
+      "np.linspace(start, stop, count) builds evenly spaced values, and you can reshape the result afterward.",
+      "If nanobots has the right values but still fails, check whether its shape is 2x2 and its dtype is int16.",
     ],
     validator: validateBootBay,
   },
@@ -604,15 +630,25 @@ print("Boot Bay arrays online.")
     title: "Views Through the Glass",
     shortDescription: "Indexing, slicing, fancy indexing, views vs copies",
     storyPrompt:
-      "Sensor Deck is blind. You need to splice out precise windows from a scanning matrix and prove that one slice is a live view while another is a safe copy.",
+      "Sensor Deck is blind. You need to splice out precise windows from a scanning matrix and prove that one slice stays live while another becomes a safe copy.",
+    focusPrompt:
+      "Use indexing, slicing, and fancy indexing to pull the right data, then show the difference between a view and a copy.",
+    successSignal:
+      "A correct solution updates sensor_grid through view_patch, keeps copy_patch independent, and unlocks Reactor Garden.",
+    commonPitfalls: [
+      "Starting rows or columns at the wrong index because Python counts from 0.",
+      "Forgetting that slices stop before the end value.",
+      "Leaving first_row or scan_window as live views even though later mutations should preserve those snapshots.",
+      "Mutating copy_patch without calling .copy(), which accidentally leaves it tied to sensor_grid.",
+    ],
     learningGoals: [
       "Index rows and submatrices from an ndarray.",
       "Use fancy indexing with matching index arrays.",
       "See the difference between a view and a copy.",
     ],
     tasks: [
-      "Fix first_row so it grabs the first row of sensor_grid.",
-      "Fix scan_window so it captures rows 1:3 and cols 1:4.",
+      "Fix first_row so it captures the original first row of sensor_grid before later mutations.",
+      "Fix scan_window so it captures the original rows 1:3 and cols 1:4 window before later mutations.",
       "Use fancy indexing to pull [2, 12, 13] into priority.",
       "Make copy_patch a true copy before you edit it.",
       "Mutate view_patch by adding 100 so the parent sensor_grid changes too.",
@@ -630,24 +666,37 @@ print("Boot Bay arrays online.")
       { label: ".copy()", pattern: /\.copy\s*\(/ },
     ],
     starterCode: `# Sensor Deck: restore visibility.
+# The matrix is healthy; your job is to select and mutate the right views.
 
 sensor_grid = np.arange(1, 17).reshape(4, 4)
 
+# TODO: grab the first row as a snapshot before later mutations happen.
 first_row = sensor_grid[1]
+
+# TODO: take rows 1:3 and columns 1:4 as a snapshot before later mutations happen.
 scan_window = sensor_grid[0:2, 0:2]
+
+# TODO: use fancy indexing to pull [2, 12, 13].
 priority = sensor_grid[[0, 1, 2], [0, 1, 2]]
+
 view_patch = sensor_grid[:, :2]
+
+# TODO: make copy_patch an actual copy before editing it.
 copy_patch = sensor_grid[:, :2]
 
+# TODO: add 100 to every value in view_patch so sensor_grid changes too.
 view_patch[:] = view_patch
+
+# TODO: set the top-left cell of copy_patch to -999 without changing sensor_grid.
 copy_patch[0, 0] = copy_patch[0, 0]
 
 print("Sensor deck aligned.")
 `,
     hints: [
       "Python slices stop just before the end index, so 1:3 means rows 1 and 2.",
-      "Fancy indexing can pair row and column index arrays element-by-element.",
-      "A slice is usually a view; add .copy() when you want independence.",
+      "Fancy indexing pairs row and column index arrays element-by-element: each pair picks one value.",
+      "If first_row or scan_window changes after you mutate view_patch, capture those earlier slices with .copy().",
+      "A slice is usually a view. Add .copy() only to the array that must stay independent.",
     ],
     validator: validateSensorDeck,
   },
@@ -659,6 +708,15 @@ print("Sensor deck aligned.")
     shortDescription: "Vectorized arithmetic, ufuncs, comparisons, broadcasting",
     storyPrompt:
       "The ship's reactor planters pulse like a neon garden. Tune the waveform by running NumPy math over whole arrays instead of touching one cell at a time.",
+    focusPrompt:
+      "Run one clean vectorized pipeline: sanitize the signed readings, transform them with ufuncs, then broadcast the bias vector across the rows.",
+    successSignal:
+      "When the pipeline is correct, the danger mask lights the hottest cells and Quarantine Lab becomes available.",
+    commonPitfalls: [
+      "Trying to take square roots before removing the negative signs.",
+      "Forgetting that bias is a row vector that broadcasts across each row of root_heat.",
+      "Comparing the wrong array when you create the danger mask.",
+    ],
     learningGoals: [
       "Apply ufuncs like abs, sqrt, sin, exp, and log1p to entire arrays.",
       "Use vectorized comparisons to make a danger mask.",
@@ -687,24 +745,36 @@ print("Sensor deck aligned.")
       { label: "comparison", pattern: />\s*4/ },
     ],
     starterCode: `# Reactor Garden: tune the waveform.
+# Build each array from the previous one instead of typing final values by hand.
 
 heat = np.array([[1.0, -4.0, 9.0], [16.0, -25.0, 36.0]])
 bias = np.array([0.5, 1.0, 1.5])
 
+# TODO: take the absolute value first.
 magnitude = heat
+
+# TODO: take the square root of magnitude.
 root_heat = magnitude
+
+# TODO: apply np.sin to root_heat.
 wave = magnitude
+
+# TODO: broadcast bias across the rows of root_heat.
 boosted = root_heat
+
+# TODO: use boosted to build efficiency and log_signal.
 efficiency = root_heat
 log_signal = root_heat
+
+# TODO: mark boosted values greater than 4.
 danger = heat
 
 print("Reactor waveforms tuned.")
 `,
     hints: [
-      "np.abs can clean up negative values before you take square roots.",
-      "Adding a 1D array of length 3 to a 2x3 matrix broadcasts across rows.",
-      "Comparison operators like > return boolean arrays element-by-element.",
+      "Use np.abs before np.sqrt so the signed heat map becomes safe to transform.",
+      "Adding a length-3 vector to a 2x3 matrix broadcasts across each row automatically.",
+      "Build danger from boosted > 4 so the mask reflects the post-bias heat level.",
     ],
     validator: validateReactorGarden,
   },
@@ -716,6 +786,15 @@ print("Reactor waveforms tuned.")
     shortDescription: "Boolean masks, where, filtering, any, all, NaN cleanup",
     storyPrompt:
       "Spores leaked into the bio lab. You need masks that find missing readings, filter out unsafe samples, and summarize the room before the contamination spreads.",
+    focusPrompt:
+      "Clean the sample grid with masks and where, then summarize the room with boolean reductions instead of manual inspection.",
+    successSignal:
+      "A correct mask pipeline leaves only safe cells in quarantine and opens Cargo Forge.",
+    commonPitfalls: [
+      "Masking NaN values directly instead of building a boolean mask first.",
+      "Filtering the raw samples array instead of the cleaned array.",
+      "Using Python any/all instead of NumPy np.any and np.all on array comparisons.",
+    ],
     learningGoals: [
       "Use np.isnan and boolean logic to spot missing data.",
       "Replace NaN with safe fill values using np.where.",
@@ -742,6 +821,7 @@ print("Reactor waveforms tuned.")
       { label: "np.all", pattern: /np\.all\s*\(/ },
     ],
     starterCode: `# Quarantine Lab: stabilize the samples.
+# Build your masks step by step so each one explains the next array.
 
 samples = np.array([
     [1.2, np.nan, 3.5],
@@ -749,20 +829,29 @@ samples = np.array([
     [2.1, 0.0, 4.4],
 ], dtype=np.float64)
 
+# TODO: mark the finite cells with ~np.isnan(samples).
 finite_mask = samples
+
+# TODO: replace NaN with 0.0 using np.where.
 clean = samples
+
+# TODO: keep only the clean values that are at least 0.5.
 safe_mask = clean
 filtered = clean
+
+# TODO: summarize the cleaned grid with np.any and np.all.
 has_breach = False
 all_stable = False
+
+# TODO: keep safe cells and zero-out the rest.
 quarantine = clean
 
 print("Lab quarantine sweep staged.")
 `,
     hints: [
-      "np.isnan returns a boolean array that is perfect for masking missing values.",
-      "np.where(condition, when_true, when_false) works element-by-element on the whole grid.",
-      "You can filter an array directly with clean[safe_mask].",
+      "np.isnan returns a boolean array, so invert it with ~ if you want the finite cells instead.",
+      "np.where(condition, when_true, when_false) works element-by-element across the whole grid.",
+      "Filter the cleaned grid with clean[safe_mask], then use the same mask to build quarantine.",
     ],
     validator: validateQuarantineLab,
   },
@@ -774,6 +863,15 @@ print("Lab quarantine sweep staged.")
     shortDescription: "Reshape, flatten, transpose, swapaxes, concatenate, stack, split, repeat, tile",
     storyPrompt:
       "Cargo Forge is a shifting puzzle of crates and drones. Repack the hold by bending dimensions, merging layouts, and cloning patterns without losing track of the data.",
+    focusPrompt:
+      "Show that you can reorganize the same cargo with reshaping, axis swaps, joins, splits, and repeated patterns.",
+    successSignal:
+      "When the hold is packed correctly, stacked cargo layers and tiled safety lanes should both validate and Drone Bridge should unlock.",
+    commonPitfalls: [
+      "Confusing ravel() and flatten() when one returns a view and the other returns a copy.",
+      "Using the wrong axis when concatenating or stacking left and right modules.",
+      "Building tiled output from the wrong base pattern.",
+    ],
     learningGoals: [
       "Reshape, ravel, and flatten arrays into new views or copies.",
       "Rotate axes with transpose and swapaxes.",
@@ -805,20 +903,32 @@ print("Lab quarantine sweep staged.")
       { label: "tile", pattern: /tile\s*\(/ },
     ],
     starterCode: `# Cargo Forge: repack the hold.
+# Reuse the provided arrays. Your job is to reorganize them without losing data.
 
 crates = np.arange(1, 13).reshape(3, 4)
 left = np.array([[1, 2], [3, 4]])
 right = np.array([[5, 6], [7, 8]])
 cube = np.arange(1, 9).reshape(2, 2, 2)
 
+# TODO: reshape crates into a 2x6 grid.
 reshaped = crates
+
+# TODO: use ravel() for a flat view and flatten() for a flat copy.
 flat_view = crates
 flat_copy = crates
+
+# TODO: rotate crates with transpose and rotate cube with swapaxes.
 transposed = crates
 swapped = cube
+
+# TODO: join left and right across columns, then stack them into a new axis.
 merged = left
 stacked = left
+
+# TODO: split np.arange(12) into 3 equal sections.
 sections = np.array([1, 2, 3])
+
+# TODO: repeat [1, 2, 3] twice each and tile the checker pattern to 4x4.
 repeated = np.array([1, 2, 3])
 tiled = left
 
@@ -826,8 +936,8 @@ print("Cargo patterns queued.")
 `,
     hints: [
       "ravel() often returns a flattened view, while flatten() returns a new copy.",
-      "The transpose shortcut for a 2D array is array.T.",
-      "np.tile can repeat a small pattern in both row and column directions.",
+      "For a 2D array, array.T is the quickest transpose.",
+      "A 2x2 checker can become a 4x4 deck if you tile it with (2, 2).",
     ],
     validator: validateCargoForge,
   },
@@ -839,6 +949,15 @@ print("Cargo patterns queued.")
     shortDescription: "Aggregations, axis semantics, sorting, unique, random Generator, dot, matmul",
     storyPrompt:
       "The drone fleet is awake but drifting. Seed the route planner, measure traffic along the right axes, and compute a clean navigation matrix before the swarm collides.",
+    focusPrompt:
+      "Seed the generator, reduce traffic along the right axes, then finish with sorting, uniqueness, dot products, and matrix multiplication.",
+    successSignal:
+      "The same seeded traffic grid should appear every run, and the navigation matrix should pass once the analytics are correct.",
+    commonPitfalls: [
+      "Using the wrong seed, which changes every downstream expected value.",
+      "Mixing up axis=0 and axis=1 on totals and means.",
+      "Using sort on the whole matrix when the mission asks for argsort on only the first row.",
+    ],
     learningGoals: [
       "Generate repeatable random values with np.random.default_rng().",
       "Use reduction ops like sum, mean, min, max, std, argmin, and argmax along the right axis.",
@@ -872,9 +991,12 @@ print("Cargo patterns queued.")
       { label: "dot", pattern: /dot\s*\(/ },
     ],
     starterCode: `# Drone Bridge: route the swarm.
+# Keep the route matrices. Replace the placeholder analytics with real NumPy results.
 
 rng = np.random.default_rng(0)
 traffic = np.zeros((3, 4), dtype=int)
+
+# TODO: reduce traffic across rows and columns with the correct axes.
 totals = traffic
 means = traffic
 minimum = 0
@@ -882,20 +1004,25 @@ maximum = 0
 spread = 0.0
 argmin_idx = 0
 argmax_idx = 0
+
+# TODO: sort each row, then argsort only the first row.
 sorted_rows = traffic
 sort_order = np.array([])
 unique_codes = np.array([])
+
 route_a = np.array([[2, 1, 0], [1, 3, 2]])
 route_b = np.array([[1, 2], [0, 1], [4, 2]])
+
+# TODO: use matrix multiplication for navigation and np.dot for energy_dot.
 navigation = route_a
 energy_dot = 0
 
 print("Drone bridge awaiting routes.")
 `,
     hints: [
-      "A Generator from np.random.default_rng(seed) gives repeatable random values.",
-      "axis=1 reduces across columns inside each row, while axis=0 reduces down the rows for each column.",
-      "The @ operator performs matrix multiplication when the shapes line up.",
+      "A Generator from np.random.default_rng(seed) gives repeatable random values, so the exact traffic grid should match the validator.",
+      "axis=1 reduces across the columns inside each row, while axis=0 reduces down the rows for each column.",
+      "Use @ for navigation and np.dot for the 1D energy check so both matrix math styles appear in code.",
     ],
     validator: validateDroneBridge,
   },
@@ -907,6 +1034,15 @@ print("Drone bridge awaiting routes.")
     shortDescription: "Capstone: creation, masking, broadcasting, aggregation, reshape, matrix math",
     storyPrompt:
       "The colony ship can jump only once. Rebuild the final energy route from scratch by combining the NumPy tools you learned in every sector. Scalar tinkering will not save the crew.",
+    focusPrompt:
+      "Chain creation, masking, broadcasting, aggregation, reshape, and matrix multiplication into one clean rescue pipeline.",
+    successSignal:
+      "If the full array pipeline is correct, the course matrix and rescue_score will validate together and the whole ship will come online.",
+    commonPitfalls: [
+      "Starting the grid at 0 instead of 1, which shifts every downstream result.",
+      "Applying the broadcast vector before masking out the odd cells.",
+      "Typing the final numbers directly instead of building them through array operations.",
+    ],
     learningGoals: [
       "Create a structured grid from scratch with arange and reshape.",
       "Use a boolean mask with where to keep only the useful cells.",
@@ -935,6 +1071,7 @@ print("Drone bridge awaiting routes.")
       { label: "matmul", pattern: /@|matmul\s*\(/ },
     ],
     starterCode: `# Colony Core: execute the rescue sequence.
+# This capstone should read like a NumPy pipeline, not a pile of hand-entered answers.
 
 weights = np.array([
     [1.0, 0.5],
@@ -947,20 +1084,29 @@ weights = np.array([
     [0.3, 1.2],
 ])
 
+# TODO: start with the 4x4 grid from 1 through 16.
 grid = np.arange(16).reshape(4, 4)
+
+# TODO: keep only the even cells with np.where.
 safe = grid
+
+# TODO: broadcast the repair vector across safe, then sum across axis 1.
 row_power = np.zeros(4)
 boosted = grid
+
+# TODO: reshape boosted to (2, 8), then use @ with weights.
 matrix = grid
 course = np.zeros((2, 2))
+
+# TODO: rescue_score should be the mean of the course matrix.
 rescue_score = 0.0
 
 print("Colony Core rescue path pending.")
 `,
     hints: [
       "Build the final grid from 1 through 16, not 0 through 15.",
-      "A boolean mask like grid % 2 == 0 pairs naturally with np.where.",
-      "The capstone should chain whole-array operations together. Avoid hand-typing the final numbers.",
+      "A boolean mask like grid % 2 == 0 pairs naturally with np.where(grid % 2 == 0, grid, 0).",
+      "If your course matrix is off, inspect the mask step, the broadcast vector, and the reshape before checking the matmul.",
     ],
     validator: validateCapstone,
   },

@@ -9,4 +9,9 @@ Original prompt: Implement the "NumPy Nebula: Reboot the Colony Ship" web-based 
 - Verified with the bundled web-game Playwright client against `http://127.0.0.1:4173`.
 - Manually confirmed in-browser that Boot Bay validates correctly, unlocks Sensor Deck, and populates the array inspector with live ndarray metadata.
 - Final console check is clean aside from expected NumPy load logs.
-- TODO: Add richer authored content or more advanced mission variants if we want broader pacing beyond the core seven-sector campaign.
+- Added a first-run onboarding banner, mission focus panel, common-pitfall coaching, and richer run feedback so the lesson flow is clearer before and after each code run.
+- Strengthened the mission content pass by improving starter-code comments, hints, and authored guidance across all seven sectors.
+- Added end-to-end browser regression coverage in `scripts/regression-check.js` and wired it into `npm run test:regression`.
+- Added GitHub Actions workflows for regression CI and GitHub Pages deployment.
+- Re-ran the browser verification suite and confirmed all seven sectors can be solved end to end, including reset behavior and inspector sync.
+- TODO: Add more authored late-game variants or alternate difficulty modes if we want a longer curriculum beyond the seven-sector campaign.
