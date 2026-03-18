@@ -22,7 +22,7 @@ Includes [`assets/test-helper.js`](../.github/skills/webapp-testing/assets/test-
 
 > Generate a Playwright test based on a scenario using Playwright MCP.
 
-Use this skill to generate new Playwright regression tests for the NumPy Game by describing a user scenario. The generated test is saved to the `tests/` directory and iterated until passing.
+Use this skill to generate new Playwright tests for the NumPy Game by describing a user scenario. The generated test is saved to the `tests/` directory and iterated until passing. These generated specs are separate from the current `npm run test:regression` CI flow unless the repository is explicitly updated to run `npx playwright test` as well.
 
 ---
 
